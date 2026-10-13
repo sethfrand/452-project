@@ -1,0 +1,393 @@
+[
+  {
+    "strategy": "zero_shot",
+    "question": "Which runner has run the most total kilometers?",
+    "sql": "SELECT r.name, SUM(rt.distance_km) AS total_kilometers\nFROM runner r\nJOIN run rn ON r.runner_id = rn.runner_id\nJOIN route rt ON rn.route_id = rt.route_id\nGROUP BY r.runner_id\nORDER BY total_kilometers DESC\nLIMIT 1;",
+    "rows": [
+      [
+        "Walt Birch",
+        70.0
+      ]
+    ],
+    "friendly": "The runner who has run the most total kilometers is Walt Birch, with a total of 70.0 kilometers.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "What is each runner's average pace in minutes per km?",
+    "sql": "SELECT r.runner_id, \n       r.name, \n       AVG(run.duration_minutes / route.distance_km) AS average_pace_minutes_per_km\nFROM runner r\nJOIN run ON r.runner_id = run.runner_id\nJOIN route ON run.route_id = route.route_id\nGROUP BY r.runner_id, r.name;",
+    "rows": [
+      [
+        1,
+        "Priya Nair",
+        6.3375
+      ],
+      [
+        2,
+        "Tom Kessler",
+        5.8
+      ],
+      [
+        3,
+        "Ana Souza",
+        6.189166666666667
+      ],
+      [
+        4,
+        "Walt Birch",
+        7.475
+      ]
+    ],
+    "friendly": "The average pace for each runner is as follows: Priya Nair has an average pace of 6.34 minutes per kilometer, Tom Kessler has an average pace of 5.8 minutes per kilometer, Ana Souza has an average pace of 6.19 minutes per kilometer, and Walt Birch has an average pace of 7.48 minutes per kilometer.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Which shoe models are linked to the most injuries per 100 km run in them?",
+    "sql": null,
+    "rows": null,
+    "friendly": null,
+    "error": "no such column: r.distance_km"
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Which runners are currently injured?",
+    "sql": "SELECT r.runner_id, r.name, i.body_part, i.start_date, i.severity\nFROM runner r\nJOIN injury i ON r.runner_id = i.runner_id\nWHERE i.end_date IS NULL;",
+    "rows": [
+      [
+        2,
+        "Tom Kessler",
+        "Shin splints",
+        "2024-03-21",
+        2
+      ]
+    ],
+    "friendly": "Currently, Tom Kessler is injured with shin splints, which started on March 21, 2024, and the severity of his injury is rated at 2.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Which runners have never run on a trail?",
+    "sql": "SELECT DISTINCT r.runner_id, r.name \nFROM runner r \nLEFT JOIN run run ON r.runner_id = run.runner_id \nLEFT JOIN route rt ON run.route_id = rt.route_id \nWHERE rt.surface != 'trail' OR rt.route_id IS NULL \nGROUP BY r.runner_id \nHAVING COUNT(rt.route_id) = 0;",
+    "rows": [],
+    "friendly": "There are no runners who have never run on a trail.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Who ran their longest route in a retired pair of shoes?",
+    "sql": "SELECT DISTINCT r.name\nFROM runner r\nJOIN run run ON r.runner_id = run.runner_id\nJOIN shoe s ON run.shoe_id = s.shoe_id\nJOIN route rt ON run.route_id = rt.route_id\nWHERE s.retired = 1 AND rt.distance_km = (\n    SELECT MAX(rt2.distance_km)\n    FROM run run2\n    JOIN shoe s2 ON run2.shoe_id = s2.shoe_id\n    JOIN route rt2 ON run2.route_id = rt2.route_id\n    WHERE s2.retired = 1\n);",
+    "rows": [
+      [
+        "Tom Kessler"
+      ],
+      [
+        "Walt Birch"
+      ]
+    ],
+    "friendly": "Tom Kessler and Walt Birch ran their longest route in a retired pair of shoes.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Which routes have been run by every runner?",
+    "sql": "SELECT r.route_id, r.name\nFROM route r\nJOIN run ru ON r.route_id = ru.route_id\nGROUP BY r.route_id, r.name\nHAVING COUNT(DISTINCT ru.runner_id) = (SELECT COUNT(*) FROM runner);",
+    "rows": [
+      [
+        1,
+        "River Loop"
+      ],
+      [
+        4,
+        "Lakeshore Long Run"
+      ]
+    ],
+    "friendly": "The routes that have been run by every runner are the \"River Loop\" and the \"Lakeshore Long Run.\"",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Who had the pair of shoes with the most milage?",
+    "sql": "SELECT s.shoe_id, r.name, SUM(run.duration_minutes) AS total_mileage\nFROM run run\nJOIN shoe s ON run.shoe_id = s.shoe_id\nJOIN runner r ON s.runner_id = r.runner_id\nGROUP BY s.shoe_id\nORDER BY total_mileage DESC\nLIMIT 1;",
+    "rows": [
+      [
+        5,
+        "Ana Souza",
+        312.0
+      ]
+    ],
+    "friendly": "Ana Souza had the pair of shoes with the most mileage, totaling 312.0 miles.",
+    "error": null
+  },
+  {
+    "strategy": "zero_shot",
+    "question": "Which runner had the pair of shoes with the most milage?",
+    "sql": "SELECT r.name, s.brand, s.model, SUM(run.duration_minutes) AS total_mileage\nFROM runner r\nJOIN shoe s ON r.runner_id = s.runner_id\nJOIN run ON s.shoe_id = run.shoe_id\nGROUP BY s.shoe_id\nORDER BY total_mileage DESC\nLIMIT 1;",
+    "rows": [
+      [
+        "Ana Souza",
+        "Saucony",
+        "Kinvara 14",
+        312.0
+      ]
+    ],
+    "friendly": "The runner with the pair of shoes that had the most mileage is Ana Souza, who wore Saucony Kinvara 14 shoes, with a total mileage of 312.0 miles.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which runner has run the most total kilometers?",
+    "sql": "SELECT ru.name, SUM(ro.distance_km) AS total_km \nFROM run r \nJOIN runner ru ON r.runner_id = ru.runner_id \nJOIN route ro ON r.route_id = ro.route_id \nGROUP BY ru.runner_id \nORDER BY total_km DESC \nLIMIT 1;",
+    "rows": [
+      [
+        "Walt Birch",
+        70.0
+      ]
+    ],
+    "friendly": "The runner who has run the most total kilometers is Walt Birch, with a total of 70 kilometers.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "What is each runner's average pace in minutes per km?",
+    "sql": "SELECT ru.name, AVG(r.duration_minutes / ro.distance_km) AS average_pace_minutes_per_km\nFROM run r\nJOIN runner ru ON r.runner_id = ru.runner_id\nJOIN route ro ON r.route_id = ro.route_id\nGROUP BY ru.runner_id;",
+    "rows": [
+      [
+        "Priya Nair",
+        6.3375
+      ],
+      [
+        "Tom Kessler",
+        5.8
+      ],
+      [
+        "Ana Souza",
+        6.189166666666667
+      ],
+      [
+        "Walt Birch",
+        7.475
+      ]
+    ],
+    "friendly": "The average pace for each runner is as follows: Priya Nair has an average pace of 6.34 minutes per kilometer, Tom Kessler has an average pace of 5.8 minutes per kilometer, Ana Souza has an average pace of 6.19 minutes per kilometer, and Walt Birch has an average pace of 7.48 minutes per kilometer.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which shoe models are linked to the most injuries per 100 km run in them?",
+    "sql": null,
+    "rows": null,
+    "friendly": null,
+    "error": "no such column: r.distance_km"
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which runners are currently injured?",
+    "sql": "SELECT DISTINCT ru.name FROM injury i JOIN runner ru ON i.runner_id=ru.runner_id WHERE i.end_date IS NULL;",
+    "rows": [
+      [
+        "Tom Kessler"
+      ]
+    ],
+    "friendly": "The currently injured runner is Tom Kessler.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which runners have never run on a trail?",
+    "sql": "SELECT DISTINCT ru.name \nFROM runner ru \nWHERE ru.runner_id NOT IN (\n    SELECT DISTINCT r.runner_id \n    FROM run r \n    JOIN route ro ON r.route_id = ro.route_id \n    WHERE ro.surface = 'trail'\n);",
+    "rows": [
+      [
+        "Tom Kessler"
+      ],
+      [
+        "Walt Birch"
+      ]
+    ],
+    "friendly": "The runners who have never run on a trail are Tom Kessler and Walt Birch.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Who ran their longest route in a retired pair of shoes?",
+    "sql": "SELECT ru.name \nFROM runner ru \nJOIN run r ON ru.runner_id = r.runner_id \nJOIN shoe s ON r.shoe_id = s.shoe_id \nJOIN route ro ON r.route_id = ro.route_id \nWHERE s.retired = 1 \nAND r.duration_minutes = (SELECT MAX(duration_minutes) \n                          FROM run r2 \n                          JOIN shoe s2 ON r2.shoe_id = s2.shoe_id \n                          WHERE s2.retired = 1 \n                          AND r2.runner_id = ru.runner_id);",
+    "rows": [
+      [
+        "Tom Kessler"
+      ],
+      [
+        "Walt Birch"
+      ]
+    ],
+    "friendly": "Tom Kessler and Walt Birch ran their longest routes in a retired pair of shoes.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which routes have been run by every runner?",
+    "sql": "SELECT ro.name \nFROM route ro \nWHERE NOT EXISTS (\n    SELECT 1 \n    FROM runner ru \n    WHERE NOT EXISTS (\n        SELECT 1 \n        FROM run r \n        WHERE r.runner_id = ru.runner_id AND r.route_id = ro.route_id\n    )\n);",
+    "rows": [
+      [
+        "River Loop"
+      ],
+      [
+        "Lakeshore Long Run"
+      ]
+    ],
+    "friendly": "Every runner has run the \"River Loop\" and \"Lakeshore Long Run\" routes.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Who had the pair of shoes with the most milage?",
+    "sql": "SELECT s.runner_id, s.brand, s.model, SUM(r.duration_minutes) AS total_mileage\nFROM shoe s\nJOIN run r ON s.shoe_id = r.shoe_id\nGROUP BY s.shoe_id\nORDER BY total_mileage DESC\nLIMIT 1;",
+    "rows": [
+      [
+        3,
+        "Saucony",
+        "Kinvara 14",
+        312.0
+      ]
+    ],
+    "friendly": "The pair of shoes with the most mileage belonged to runner 3 and was a Saucony Kinvara 14, with a total mileage of 312.0 minutes.",
+    "error": null
+  },
+  {
+    "strategy": "single_domain",
+    "question": "Which runner had the pair of shoes with the most milage?",
+    "sql": "SELECT ru.name, s.shoe_id, SUM(r.duration_minutes) AS total_mileage\nFROM run r \nJOIN shoe s ON r.shoe_id = s.shoe_id \nJOIN runner ru ON s.runner_id = ru.runner_id \nGROUP BY s.shoe_id \nORDER BY total_mileage DESC \nLIMIT 1;",
+    "rows": [
+      [
+        "Ana Souza",
+        5,
+        312.0
+      ]
+    ],
+    "friendly": "The runner with the pair of shoes that had the most mileage is Ana Souza, with a total mileage of 312.0 minutes on her shoes.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which runner has run the most total kilometers?",
+    "sql": "SELECT r.name \nFROM runner r \nJOIN run ru ON r.runner_id = ru.runner_id \nJOIN route ro ON ru.route_id = ro.route_id \nGROUP BY r.runner_id \nORDER BY SUM(ro.distance_km) DESC \nLIMIT 1;",
+    "rows": [
+      [
+        "Walt Birch"
+      ]
+    ],
+    "friendly": "The runner who has run the most total kilometers is Walt Birch.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "What is each runner's average pace in minutes per km?",
+    "sql": "SELECT r.runner_id, r.name, AVG(run.duration_minutes / route.distance_km) AS average_pace_minutes_per_km\nFROM runner r\nJOIN run ON r.runner_id = run.runner_id\nJOIN route ON run.route_id = route.route_id\nGROUP BY r.runner_id, r.name;",
+    "rows": [
+      [
+        1,
+        "Priya Nair",
+        6.3375
+      ],
+      [
+        2,
+        "Tom Kessler",
+        5.8
+      ],
+      [
+        3,
+        "Ana Souza",
+        6.189166666666667
+      ],
+      [
+        4,
+        "Walt Birch",
+        7.475
+      ]
+    ],
+    "friendly": "Priya Nair's average pace is 6.34 minutes per kilometer, Tom Kessler's is 5.8 minutes per kilometer, Ana Souza's is 6.19 minutes per kilometer, and Walt Birch's is 7.48 minutes per kilometer.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which shoe models are linked to the most injuries per 100 km run in them?",
+    "sql": null,
+    "rows": null,
+    "friendly": null,
+    "error": "no such column: r.distance_km"
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which runners are currently injured?",
+    "sql": "SELECT r.name \nFROM runner r \nJOIN injury i ON r.runner_id = i.runner_id \nWHERE i.end_date IS NULL;",
+    "rows": [
+      [
+        "Tom Kessler"
+      ]
+    ],
+    "friendly": "The currently injured runner is Tom Kessler.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which runners have never run on a trail?",
+    "sql": null,
+    "rows": null,
+    "friendly": null,
+    "error": "no such column: r2.runner_id"
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Who ran their longest route in a retired pair of shoes?",
+    "sql": "SELECT r.name \nFROM runner r \nJOIN run rn ON r.runner_id = rn.runner_id \nJOIN shoe s ON rn.shoe_id = s.shoe_id \nJOIN route rt ON rn.route_id = rt.route_id \nWHERE s.retired = 1 \nAND rt.distance_km = (SELECT MAX(rt2.distance_km) \n                      FROM run rn2 \n                      JOIN shoe s2 ON rn2.shoe_id = s2.shoe_id \n                      JOIN route rt2 ON rn2.route_id = rt2.route_id \n                      WHERE s2.retired = 1 \n                      AND rn2.runner_id = r.runner_id);",
+    "rows": [
+      [
+        "Tom Kessler"
+      ],
+      [
+        "Walt Birch"
+      ]
+    ],
+    "friendly": "Tom Kessler and Walt Birch ran their longest route in a retired pair of shoes.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which routes have been run by every runner?",
+    "sql": "SELECT r.name \nFROM route r \nWHERE NOT EXISTS (\n    SELECT * \n    FROM runner rn \n    WHERE NOT EXISTS (\n        SELECT * \n        FROM run ru \n        WHERE ru.route_id = r.route_id AND ru.runner_id = rn.runner_id\n    )\n);",
+    "rows": [
+      [
+        "River Loop"
+      ],
+      [
+        "Lakeshore Long Run"
+      ]
+    ],
+    "friendly": "Every runner has run the \"River Loop\" and \"Lakeshore Long Run\" routes.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Who had the pair of shoes with the most milage?",
+    "sql": "SELECT s.shoe_id, SUM(r.duration_minutes) AS total_mileage\nFROM shoe s\nJOIN run r ON s.shoe_id = r.shoe_id\nGROUP BY s.shoe_id\nORDER BY total_mileage DESC\nLIMIT 1;",
+    "rows": [
+      [
+        5,
+        312.0
+      ]
+    ],
+    "friendly": "The pair of shoes with the most mileage is shoe ID 5, with a total of 312.0 minutes of running.",
+    "error": null
+  },
+  {
+    "strategy": "cross_domain",
+    "question": "Which runner had the pair of shoes with the most milage?",
+    "sql": "SELECT r.name \nFROM runner r \nJOIN shoe s ON r.runner_id = s.runner_id \nJOIN run ru ON s.shoe_id = ru.shoe_id \nGROUP BY s.shoe_id \nORDER BY SUM(ru.duration_minutes) DESC \nLIMIT 1;",
+    "rows": [
+      [
+        "Ana Souza"
+      ]
+    ],
+    "friendly": "The runner with the pair of shoes that had the most mileage is Ana Souza.",
+    "error": null
+  }
+]
